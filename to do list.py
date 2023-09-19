@@ -1,5 +1,20 @@
+import time
 from datetime import datetime
 
+# Define a custom function for retrying an operation with a maximum number of retries
+def retry_operation(operation, max_retries=3, delay_seconds=1):
+    for retry in range(max_retries):
+        try:
+            result = operation()
+            return result
+        except Exception as e:
+            print(f"Error: {str(e)}")
+            if retry < max_retries - 1:
+                print(f"Retrying in {delay_seconds} seconds...")
+                time.sleep(delay_seconds)
+    raise Exception("Operation failed after multiple retries.")
+
+# Memento Pattern
 class TaskMemento:
     def __init__(self, task):
         self._state = task
@@ -12,7 +27,7 @@ class Task:
         self.description = description
         self.completed = False
         self.due_date = None
-        self.priority = "Medium"  
+        self.priority = None
         self.tags = []
 
     def mark_completed(self):
@@ -24,20 +39,31 @@ class Task:
     def set_priority(self, priority):
         self.priority = priority
 
-    def add_tag(self, tag):
-        self.tags.append(tag)
+    def add_tags(self, tags):
+        self.tags.extend(tags)
+
+    def remove_tags(self, tags):
+        for tag in tags:
+            if tag in self.tags:
+                self.tags.remove(tag)
+
+    def list_tags(self):
+        return self.tags
 
     def get_info(self):
         status = "Completed" if self.completed else "Pending"
         info = f"{self.description} - {status}, Due: {self.due_date}, Priority: {self.priority}, Tags: {', '.join(self.tags)}"
         return info
 
+    # Memento Pattern
     def create_memento(self):
         return TaskMemento(self)
 
+    # Memento Pattern
     def restore_from_memento(self, memento):
         self.__dict__ = memento.get_state().__dict__
 
+# Builder Pattern
 class TaskBuilder:
     def __init__(self, description):
         self.task = Task(description)
@@ -52,8 +78,7 @@ class TaskBuilder:
         return self
 
     def with_tags(self, tags):
-        for tag in tags:
-            self.task.add_tag(tag)
+        self.task.add_tags(tags)
         return self
 
     def build(self):
@@ -76,7 +101,7 @@ class ToDoListManager:
         self.tasks = [task for task in self.tasks if task.description != task_description]
 
     def view_tasks(self, filter_option):
-        filter_option = filter_option.lower()
+        filter_option = filter_option.lower()  # Convert filter_option to lowercase for case-insensitive comparison
         if filter_option == "show all":
             return [task.get_info() for task in self.tasks]
         elif filter_option == "show completed":
@@ -86,6 +111,7 @@ class ToDoListManager:
         else:
             return []
 
+# User interface
 def main():
     manager = ToDoListManager()
 
@@ -95,32 +121,35 @@ def main():
         print("2. Mark Completed")
         print("3. Delete Task")
         print("4. Edit Task")
-        print("5. View Tasks")
-        print("6. Quit")
+        print("5. List Tags")
+        print("6. View Tasks")
+        print("7. Quit")
 
         choice = input("Enter your choice: ")
 
         if choice == "1":
             description = input("Enter task description: ")
             due_date_str = input("Enter due date (YYYY-MM-DD, leave empty if none): ")
-            priority = input("Enter priority (High/Medium/Low, leave empty for Medium): ")
-            tags = input("Enter tags separated by commas (e.g., work, important, personal): ").split(",")
+            priority = input("Enter priority (High/Medium/Low, leave empty if none): ")
+            tags = input("Enter tags (comma-separated, leave empty if none): ").split(',')
 
             task_builder = TaskBuilder(description)
 
             if due_date_str:
                 try:
                     due_date = datetime.strptime(due_date_str, "%Y-%m-%d")
-                    task_builder.with_due_date(due_date_str)
+                    task_builder.with_due_date(due_date_str)  # Pass the original string, not the datetime object
                 except ValueError:
                     print("Invalid due date format. Please use YYYY-MM-DD format.")
 
             if priority:
-                task_builder.with_priority(priority.strip())
+                task_builder.with_priority(priority)
 
-            task_builder.with_tags([tag.strip() for tag in tags])
+            if tags:
+                task_builder.with_tags(tags)
 
-            task = task_builder.build()
+            # Use retry_operation to add the task with transient error handling
+            task = retry_operation(lambda: task_builder.build())
             manager.add_task(task)
             print("Task added successfully!")
 
@@ -140,8 +169,8 @@ def main():
                 if task.description == task_description:
                     new_description = input("Enter new task description: ")
                     new_due_date = input("Enter new due date (YYYY-MM-DD, leave empty if none): ")
-                    new_priority = input("Enter new priority (High/Medium/Low, leave empty to keep current): ")
-                    new_tags = input("Enter new tags separated by commas (e.g., work, important, personal): ").split(",")
+                    new_priority = input("Enter new priority (High/Medium/Low, leave empty if none): ")
+                    new_tags = input("Enter new tags (comma-separated, leave empty if none): ").split(',')
 
                     task.description = new_description
 
@@ -153,9 +182,11 @@ def main():
                             print("Invalid due date format. Task not updated.")
 
                     if new_priority:
-                        task.set_priority(new_priority.strip())
+                        task.set_priority(new_priority)
 
-                    task.tags = [tag.strip() for tag in new_tags]
+                    if new_tags:
+                        task.remove_tags(task.tags)  # Clear existing tags
+                        task.add_tags(new_tags)
 
                     print("Task edited successfully!")
                     break
@@ -163,6 +194,16 @@ def main():
                 print(f"No task found with description: {task_description}")
 
         elif choice == "5":
+            task_description = input("Enter task description to list tags: ")
+            for task in manager.tasks:
+                if task.description == task_description:
+                    tags = task.list_tags()
+                    print(f"Tags for {task_description}: {', '.join(tags)}")
+                    break
+            else:
+                print(f"No task found with description: {task_description}")
+
+        elif choice == "6":
             filter_option = input("Enter filter option (Show all/Show completed/Show pending): ")
             tasks = manager.view_tasks(filter_option)
             if tasks:
@@ -172,7 +213,7 @@ def main():
             else:
                 print("No tasks found.")
 
-        elif choice == "6":
+        elif choice == "7":
             print("Goodbye!")
             break
 
