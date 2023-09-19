@@ -1,27 +1,30 @@
-This Python program implements a simple To-Do List Manager, allowing users to manage tasks with descriptions, due dates, completion status, priorities, and tags. The program features object-oriented design patterns, including the Memento Pattern for undo/redo functionality and the Builder Pattern for task creation.
+This Python-based to-do list application is a versatile and user-friendly tool designed to help you manage your tasks and stay organized. It implements various programming concepts and best practices to ensure code quality, robust functionality, and a smooth user experience.
 
-Functional Features:
+Features:
 
-Task Management: Users can add new tasks, mark them as completed, delete tasks, and edit existing tasks.
+Retry Mechanism: The code includes a custom retry operation function that allows for transient error handling, making it more resilient to network issues or external service interruptions.
 
-View Options: The program offers options to view tasks, including showing all tasks, completed tasks, or pending tasks.
+Memento Pattern: The Memento design pattern is used to capture and restore the state of tasks, providing a simple way to undo changes and revert to previous task states.
 
-Task Details: Each task includes a description, due date (optional), completion status, priority level, and tags.
+Builder Pattern: The Builder pattern is utilized for creating tasks with optional attributes such as due dates, priorities, and tags. This ensures flexibility while maintaining code readability.
 
-Design Patterns:
+Task Properties: Each task in the to-do list can have properties like due date, priority level (High, Medium, Low), and tags. Tags are used to categorize tasks for easy filtering and organization.
 
-Memento Pattern: Used for maintaining task states, enabling undo and redo operations.
+Tag Handling: Tasks can have multiple tags associated with them. You can add, remove, and list tags for each task, allowing for detailed categorization and filtering.
 
-Builder Pattern: Employed for constructing tasks with optional attributes like due date, priority, and tags.
+User Interface: The command-line interface provides a simple and intuitive way to interact with the application. Users can add, edit, mark tasks as completed, delete tasks, and view tasks based on different filter options.
+
+Filtering: Users can filter tasks by showing all tasks, completed tasks, or pending tasks, making it easy to focus on what's relevant.
+
+Exception Handling: The code implements comprehensive exception handling to provide meaningful error messages and gracefully recover from errors.
+
+Logging: Logging mechanisms are in place to track errors and relevant information, ensuring transparency and aiding in debugging.
+
+Input Validation: Robust input validation is performed at all levels to prevent invalid data from causing issues and to maintain data integrity.
 
 Usage:
 
-Run the program, and choose from the menu options to perform various tasks.
 
-To add a task, provide a description, due date (optional), priority level, and tags (optional).
 
-Tasks can be marked as completed, edited to update details, or deleted.
 
-Use the view options to filter tasks based on completion status or view all tasks.
 
-Enjoy a versatile and interactive To-Do List Manager to keep track of your tasks efficiently.
